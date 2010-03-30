@@ -14,7 +14,6 @@ module Language.Haskell.Meta.Syntax.Translate (
 ) where
 
 import Data.Typeable
-import Data.Generics
 import Data.List (foldl')
 import Language.Haskell.TH.Syntax
 import qualified Language.Haskell.Exts.Syntax as Hs
@@ -24,6 +23,9 @@ import qualified Language.Haskell.Exts.Syntax as Hs
 
 class ToName a where toName :: a -> Name
 class ToLit  a where toLit  :: a -> Lit
+class ToKind a where toKind :: a -> Kind
+class ToPred a where toPred :: a -> Pred
+class ToTyVarBndr a where toTyVarBndr :: a -> TyVarBndr
 class ToType a where toType :: a -> Type
 class ToPat  a where toPat  :: a -> Pat
 class ToExp  a where toExp  :: a -> Exp
@@ -226,7 +228,7 @@ data HsExp
   toExp (Hs.EnumFromThenTo e f g)  = ArithSeqE $ FromThenToR (toExp e) (toExp f) (toExp g)
   toExp (Hs.ExpTypeSig _ e t)      = SigE (toExp e) (toType t)
   --  HsListComp HsExp [HsStmt]
-  -- toExp (HsListComp e ss) = CompE 
+  -- toExp (HsListComp e ss) = CompE
   -- NEED: a way to go e -> Stmt
   toExp a@(Hs.ListComp e ss)       = error $ errorMsg "toExp" a
 {- HsVarQuote HsQName
@@ -290,9 +292,30 @@ instance ToLoc Hs.SrcLoc where
 
 -- * ToType HsType
 
-instance ToName Hs.TyVarBind where
-  toName (Hs.KindedVar n _) = toName n
-  toName (Hs.UnkindedVar n) = toName n
+{- |
+TH doesn't handle:
+  * !, the kind of unboxed types
+  * kind variables (as of yet unsupported by compilers)
+-}
+instance ToKind Hs.Kind where
+  toKind Hs.KindStar = StarK
+  toKind (Hs.KindFn k1 k2) = ArrowK (toKind k1) (toKind k2)
+  toKind (Hs.KindParen k) = toKind k
+  toKind a@Hs.KindBang = error $ errorMsg "toKind" a
+  toKind a@(Hs.KindVar _) = error $ errorMsg "toKind" a
+
+{- |
+TH doesn't handle:
+  * implicit params
+-}
+instance ToPred Hs.Asst where
+  toPred (Hs.ClassA n ts) = ClassP (toName n) (fmap toType ts)
+  toPred a@(Hs.EqualP ty1 ty2) = EqualP (toType ty1) (toType ty2)
+  toPred a@(Hs.IParam _ _) = error $ errorMsg "toType" a
+
+instance ToTyVarBndr Hs.TyVarBind where
+  toTyVarBndr (Hs.KindedVar n k) = KindedTV (toName n) (toKind k)
+  toTyVarBndr (Hs.UnkindedVar n) = PlainTV (toName n)
 
 {- |
 TH does't handle
@@ -302,7 +325,7 @@ TH does't handle
   * kind signatures
 -}
 instance ToType Hs.Type where
-  toType (Hs.TyForall tvbM cxt t) = ForallT (maybe [] (fmap toName) tvbM) (fmap toType cxt) (toType t)
+  toType (Hs.TyForall tvbM cxt t) = ForallT (maybe [] (fmap toTyVarBndr) tvbM) (fmap toPred cxt) (toType t)
   toType (Hs.TyFun a b) = toType a .->. toType b
   toType (Hs.TyList t) = ListT `AppT` toType t
   toType (Hs.TyTuple _ ts) = foldAppT (TupleT . length $ ts) (fmap toType ts)
@@ -314,21 +337,8 @@ instance ToType Hs.Type where
   toType (Hs.TyInfix a o b) = AppT (AppT (ConT (toName o)) (toType a)) (toType b)
   toType (Hs.TyKind t _) = toType t
 
-
-
-
 (.->.) :: Type -> Type -> Type
 a .->. b = AppT (AppT ArrowT a) b
-
-{- |
-TH doesn't handle:
-  * implicit params
-  * equality constraints
--}
-instance ToType Hs.Asst where
-  toType (Hs.ClassA n ts) = foldAppT (ConT . toName $ n) (fmap toType ts)
-  toType a@(Hs.IParam _ _) = error $ errorMsg "toType" a
-  toType a@(Hs.EqualP _ _) = error $ errorMsg "toType" a
 
 foldAppT :: Type -> [Type] -> Type
 foldAppT t ts = foldl' AppT t ts
@@ -375,22 +385,22 @@ hsQualConDeclToCon (HsQualConDecl _ tvbs cxt condec) =
 
 instance ToDec Hs.Decl where
   toDec (Hs.TypeDecl _ n ns t)
-    = TySynD (toName n) (fmap toName ns) (toType t)
+    = TySynD (toName n) (fmap toTyVarBndr ns) (toType t)
 
 
   toDec a@(Hs.DataDecl  _ dOrN cxt n ns qcds qns)
     = case dOrN of
-        Hs.DataType -> DataD (fmap toType cxt)
+        Hs.DataType -> DataD (fmap toPred cxt)
                               (toName n)
-                              (fmap toName ns)
+                              (fmap toTyVarBndr ns)
                               (fmap qualConDeclToCon qcds)
                               (fmap (toName . fst) qns)
         Hs.NewType  -> let qcd = case qcds of
                                   x:_ -> x
                                   _   -> error "toDec: Newtype has no constructors!"
-                        in NewtypeD (fmap toType cxt)
+                        in NewtypeD (fmap toPred cxt)
                                     (toName n)
-                                    (fmap toName ns)
+                                    (fmap toTyVarBndr ns)
                                     (qualConDeclToCon qcd)
                                     (fmap (toName . fst) qns)
 
@@ -426,7 +436,7 @@ instance ToDec Hs.Decl where
   toDec a@(Hs.InfixDecl _ asst i ops)                  = error $ errorMsg "toDec" a
   toDec a@(Hs.ClassDecl _ cxt n ns funDeps cDecs)      = error $ errorMsg "toDec" a
   toDec a@(Hs.InstDecl _ cxt qn ts instDecs)           = error $ errorMsg "toDec" a
-  toDec a@(Hs.DerivDecl _ cxt qn ts)                   = error $ errorMsg "toDec" a  
+  toDec a@(Hs.DerivDecl _ cxt qn ts)                   = error $ errorMsg "toDec" a
   toDec a@(Hs.DefaultDecl _ ts)                        = error $ errorMsg "toDec" a
   toDec a@(Hs.SpliceDecl _ s)                          = error $ errorMsg "toDec" a
   toDec a@(Hs.TypeSig _ ns t)
@@ -469,8 +479,8 @@ LetE [ValD (VarP x_0) (NormalB (LitE (IntegerL 2))) []] (VarE x_0) -}
 
 qualConDeclToCon :: Hs.QualConDecl -> Con
 qualConDeclToCon (Hs.QualConDecl _ [] [] cdecl) = conDeclToCon cdecl
-qualConDeclToCon (Hs.QualConDecl _ ns cxt cdecl) = ForallC (fmap toName ns)
-                                                    (fmap toType cxt)
+qualConDeclToCon (Hs.QualConDecl _ ns cxt cdecl) = ForallC (fmap toTyVarBndr ns)
+                                                    (fmap toPred cxt)
                                                     (conDeclToCon cdecl)
 
 conDeclToCon :: Hs.ConDecl -> Con
