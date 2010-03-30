@@ -9,7 +9,6 @@ Description:
 Category:       Text
 License:        BSD3
 License-File:   LICENSE
-Copyright:      (c) 2008. Mathieu Boespflug <mboes@tweag.net>
 Cabal-Version:  >= 1.2.0
 Build-Type:     Simple
 Tested-With:    GHC == 6.12
