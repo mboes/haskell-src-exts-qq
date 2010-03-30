@@ -1,0 +1,18 @@
+Name:           haskell-src-exts-qq
+Version:        0.1
+Author:         Mathieu Boespflug
+Maintainer:     Mathieu Boespflug <mboes@tweag.net>
+Homepage:       http://code.haskell.org/~mboes/mime-directory.git
+Synopsis:       A library for parsing/printing the text/directory mime type.
+Description:
+        A library for parsing\/printing the text\/directory mime type.
+Category:       Text
+License:        BSD3
+License-File:   LICENSE
+Copyright:      (c) 2008. Mathieu Boespflug <mboes@tweag.net>
+Cabal-Version:  >= 1.2.0
+Build-Type:     Simple
+Tested-With:    GHC == 6.12
+Build-Depends:  base >= 4, syb, template-haskell, haskell-src-exts
+Extensions:     PatternGuards, CPP
+Exposed-Modules: Language.Haskell.Exts.QQ
