@@ -3,6 +3,7 @@ module Language.Haskell.Exts.QQ (hs, dec) where
 import qualified Language.Haskell.Exts.Syntax as Hs
 import qualified Language.Haskell.Exts.Parser as Hs
 import qualified Language.Haskell.Exts.Extension as Hs
+import qualified Language.Haskell.Exts.Translate as Hs
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
@@ -51,13 +52,10 @@ antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
                  (const Nothing `extQ` antiE `extQ` antiP) t
     where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varE $ mkName v
-          antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ toExp e
+          antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ Hs.toExp e
           antiE _ = Nothing
           antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) = Just $ varE $ mkName n
           antiP _ = Nothing
 
 antiquotePat :: Data a => a -> Q Pat
 antiquotePat = dataToQa qualify litP conP (const Nothing)
-
-toExp :: Hs.Exp -> Exp
-toExp = undefined
