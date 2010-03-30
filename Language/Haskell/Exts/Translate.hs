@@ -176,14 +176,8 @@ instance ToExp Hs.Exp where
   toExp (Hs.EnumFromThenTo e f g)  = ArithSeqE $ FromThenToR (toExp e) (toExp f) (toExp g)
   toExp (Hs.ExpTypeSig _ e t)      = SigE (toExp e) (toType t)
   toExp a@(Hs.ListComp e ss)       = error $ errorMsg "toExp" a
-  toExp (Hs.SpliceExp spl) = toExp spl
+  toExp a@(Hs.SpliceExp spl) = error $ errorMsg "toExp" a
   toExp e = error $ errorMsg "toExp" e
-
-
-instance ToExp Hs.Splice where
-  toExp (Hs.IdSplice s) = VarE (toName s)
-  toExp (Hs.ParenSplice e) = toExp e
-
 
 -- * ToLoc SrcLoc
 
