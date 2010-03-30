@@ -13,5 +13,5 @@ Cabal-Version:  >= 1.2.0
 Build-Type:     Simple
 Tested-With:    GHC == 6.12
 Build-Depends:  base >= 4, syb, template-haskell, haskell-src-exts
-Extensions:     PatternGuards, CPP
+Extensions:     PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
 Exposed-Modules: Language.Haskell.Exts.QQ
