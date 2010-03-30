@@ -7,7 +7,7 @@
   Portability :  portable (template-haskell)
 -}
 
-module Language.Haskell.Meta.Syntax.Translate where
+module Language.Haskell.Exts.Translate where
 
 import Data.Typeable
 import Data.List (foldl')
