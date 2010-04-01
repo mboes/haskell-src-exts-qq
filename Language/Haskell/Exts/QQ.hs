@@ -54,7 +54,8 @@ antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
     where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varE $ mkName v
           antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ Hs.toExp e
           antiE _ = Nothing
-          antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) = Just $ varE $ mkName n
+          antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
+              Just $ appE [| Hs.PVar |] (varE (mkName n))
           antiP _ = Nothing
 
 antiquotePat :: Data a => a -> Q Pat
