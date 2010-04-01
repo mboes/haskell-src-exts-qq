@@ -21,11 +21,16 @@ License-File:   LICENSE
 Cabal-Version:  >= 1.8.0
 Build-Type:     Simple
 Tested-With:    GHC == 6.12
-Build-Depends:  base >= 4, syb, template-haskell, haskell-src-exts
-Extensions:     PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
-Exposed-Modules: Language.Haskell.Exts.QQ
-                 Language.Haskell.Exts.Translate
 
 source-repository head
   type:     git
   location: git://github.com/mboes/haskell-src-exts-qq
+
+library
+  Build-Depends:  base >= 4, syb, template-haskell,
+                  -- xxx awaiting cabal fix.
+                  haskell-src-exts == 1.8.2
+  Extensions:      PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
+  Exposed-Modules: Language.Haskell.Exts.QQ
+                   Language.Haskell.Exts.Translate
+  cpp-options:    -DVERSION_haskell_src_exts="1.8.2"
