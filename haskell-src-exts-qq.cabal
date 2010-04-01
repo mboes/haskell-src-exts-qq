@@ -15,3 +15,4 @@ Tested-With:    GHC == 6.12
 Build-Depends:  base >= 4, syb, template-haskell, haskell-src-exts
 Extensions:     PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
 Exposed-Modules: Language.Haskell.Exts.QQ
+                 Language.Haskell.Exts.Translate
