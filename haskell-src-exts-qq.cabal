@@ -3,10 +3,8 @@ Version:        0.1
 Author:         Mathieu Boespflug
 Maintainer:     Mathieu Boespflug <mboes@tweag.net>
 Homepage:       http://code.haskell.org/~mboes/mime-directory.git
-Synopsis:       A library for parsing/printing the text/directory mime type.
-Description:
-        A library for parsing\/printing the text\/directory mime type.
-Category:       Text
+Synopsis:       A quasiquoter for haskell-src-exts.
+Category:       Language
 License:        BSD3
 License-File:   LICENSE
 Cabal-Version:  >= 1.2.0
