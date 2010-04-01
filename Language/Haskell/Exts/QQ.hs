@@ -40,13 +40,17 @@ project f k s = case f s of
 -- quotation when the haskell-src-exts syntax module is imported qualified.
 -- The solution is to set the flavour of all names to 'NameG'.
 qualify :: Name -> Name
--- Need special cases for constructors used in string literals.
+-- Need special cases for constructors used in string literals. Assume nearly
+-- all else is a datatype defined in Syntax module of haskell-src-exts.
 qualify n | ":" <- nameBase n = n
           | "[]" <- nameBase n = n
-          | otherwise = Name (mkOccName (nameBase n)) hseflavour
+          | "Nothing" <- nameBase n = n
+          | "Just" <- nameBase n = n
+          | "SrcLoc" <- nameBase n = Name (mkOccName (nameBase n)) (flav "SrcLoc")
+          | otherwise = Name (mkOccName (nameBase n)) (flav "Syntax")
     where pkg = "haskell-src-exts-" ++ VERSION_haskell_src_exts
-          hseflavour = NameG VarName (mkPkgName pkg)
-                       (mkModName "Language.Haskell.Exts.Syntax")
+          flav mod = NameG VarName (mkPkgName pkg)
+                     (mkModName ("Language.Haskell.Exts." ++ mod))
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
