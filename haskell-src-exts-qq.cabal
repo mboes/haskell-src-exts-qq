@@ -27,7 +27,7 @@ source-repository head
   location: git://github.com/mboes/haskell-src-exts-qq
 
 library
-  Build-Depends:  base >= 4, syb, template-haskell,
+  Build-Depends:  base >= 4 && < 5, syb, template-haskell,
                   -- xxx awaiting cabal fix.
                   haskell-src-exts == 1.8.2
   Extensions:      PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
