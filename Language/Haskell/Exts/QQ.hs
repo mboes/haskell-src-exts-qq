@@ -61,4 +61,14 @@ antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
           antiP _ = Nothing
 
 antiquotePat :: Data a => a -> Q Pat
-antiquotePat = dataToQa qualify litP conP (const Nothing)
+antiquotePat = dataToQa qualify litP conP (const Nothing `extQ` antiP)
+    where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varP $ mkName v
+          antiE (Hs.SpliceExp (Hs.ParenSplice e)) =
+            case Hs.parsePat $ Hs.prettyPrint e of
+              Hs.ParseOk p -> Just $ return $ Hs.toPat p
+              Hs.ParseFailed _ err -> Just $ fail err
+          antiE _ = Nothing
+          antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
+              Just $ conP 'Hs.PVar [varP (mkName n)]
+          antiP _ = Nothing
+
