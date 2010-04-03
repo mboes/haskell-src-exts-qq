@@ -1,8 +1,6 @@
 module Language.Haskell.Exts.QQ (hs, dec) where
 
-import qualified Language.Haskell.Exts.Syntax as Hs
-import qualified Language.Haskell.Exts.Parser as Hs
-import qualified Language.Haskell.Exts.Extension as Hs
+import qualified Language.Haskell.Exts as Hs
 import qualified Language.Haskell.Exts.Translate as Hs
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
