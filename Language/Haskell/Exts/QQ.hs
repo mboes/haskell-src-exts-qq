@@ -1,3 +1,18 @@
+-- | This module defines quasiquoters for haskell-src-exts expressions and
+-- declarations.
+--
+-- Antiquotations steal the splice syntax of Template Haskell, so for
+-- example example 'x' appears antiquoted in @[hs| $x ++ $(Hs.strE \"bar\") |]@.
+-- Expressions appearing inside parenthesized splices are limited to concrete
+-- syntax expressible by Template Haskell's 'Exp' data type.
+--
+-- Names in patterns can also be antiquoted, using double parentheses. For
+-- instance:
+--
+-- > let f = Hs.name "foo" in [hs| ((f)) x = x + x |]
+--
+-- In a pattern context, antiquotations use the same syntax.
+
 module Language.Haskell.Exts.QQ (hs, dec) where
 
 import qualified Language.Haskell.Exts as Hs
