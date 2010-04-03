@@ -14,10 +14,10 @@ import Data.List (intercalate)
 hs = QuasiQuoter { quoteExp = Hs.parseExpWithMode
                               Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
                                     `project` antiquoteExp
-                  , quotePat = Hs.parsePat `project` antiquotePat
+                 , quotePat = Hs.parsePat `project` antiquotePat
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
-                  , quoteType = error "Unimplemented."
-                  , quoteDec = error "Unimplemented."
+                 , quoteType = error "Unimplemented."
+                 , quoteDec = error "Unimplemented."
 #endif
                  }
 
@@ -29,7 +29,7 @@ dec = QuasiQuoter { quoteExp = Hs.parseDeclWithMode
                   , quoteType = error "Unimplemented."
                   , quoteDec = error "Unimplemented."
 #endif
-                 }
+                  }
 
 project f k s = case f s of
                   Hs.ParseOk x -> k x
