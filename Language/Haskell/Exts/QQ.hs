@@ -55,15 +55,15 @@ project f k s = case f s of
 qualify :: Name -> Name
 -- Need special cases for constructors used in string literals. Assume nearly
 -- all else is a datatype defined in Syntax module of haskell-src-exts.
-qualify n | ":" <- nameBase n = n
-          | "[]" <- nameBase n = n
-          | "Nothing" <- nameBase n = n
-          | "Just" <- nameBase n = n
-          | "SrcLoc" <- nameBase n = Name (mkOccName (nameBase n)) (flav "SrcLoc")
-          | otherwise = Name (mkOccName (nameBase n)) (flav "Syntax")
+qualify n | ":" <- nameBase n = '(:)
+          | "[]" <- nameBase n = '[]
+          | "Nothing" <- nameBase n = '[]
+          | "Just" <- nameBase n = 'Just
+          | "SrcLoc" <- nameBase n = 'Hs.SrcLoc
+          | otherwise = Name (mkOccName (nameBase n)) flavour
     where pkg = "haskell-src-exts-" ++ VERSION_haskell_src_exts
-          flav mod = NameG VarName (mkPkgName pkg)
-                     (mkModName ("Language.Haskell.Exts." ++ mod))
+          flavour = NameG VarName (mkPkgName pkg)
+                    (mkModName "Language.Haskell.Exts.Syntax")
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
