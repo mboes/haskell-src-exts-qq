@@ -24,6 +24,7 @@ import Data.Generics
 import Data.List (intercalate)
 
 
+-- | A quasiquoter for expressions.
 hs = QuasiQuoter { quoteExp = Hs.parseExpWithMode
                               Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
                                     `project` antiquoteExp
@@ -34,6 +35,7 @@ hs = QuasiQuoter { quoteExp = Hs.parseExpWithMode
 #endif
                  }
 
+-- | A quasiquoter for top-level declarations.
 dec = QuasiQuoter { quoteExp = Hs.parseDeclWithMode
                                Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
                                      `project` antiquoteExp
