@@ -24,9 +24,11 @@ errorMsg fun a = concat
 
 class ToName a where toName :: a -> Name
 class ToLit  a where toLit  :: a -> Lit
+#if MIN_VERSION_template_haskell(2,4,0)
 class ToKind a where toKind :: a -> Kind
 class ToPred a where toPred :: a -> Pred
 class ToTyVarBndr a where toTyVarBndr :: a -> TyVarBndr
+#endif
 class ToType a where toType :: a -> Type
 class ToPat  a where toPat  :: a -> Pat
 class ToExp  a where toExp  :: a -> Exp
@@ -187,6 +189,8 @@ instance ToLoc Hs.SrcLoc where
 
 -- * ToType HsType
 
+
+#if MIN_VERSION_template_haskell(2,4,0)
 {- |
 TH doesn't handle:
   * !, the kind of unboxed types
@@ -211,6 +215,7 @@ instance ToPred Hs.Asst where
 instance ToTyVarBndr Hs.TyVarBind where
   toTyVarBndr (Hs.KindedVar n k) = KindedTV (toName n) (toKind k)
   toTyVarBndr (Hs.UnkindedVar n) = PlainTV (toName n)
+#endif
 
 {- |
 TH does't handle
@@ -220,7 +225,11 @@ TH does't handle
   * kind signatures
 -}
 instance ToType Hs.Type where
+#if MIN_VERSION_template_haskell(2,4,0)
   toType (Hs.TyForall tvbM cxt t) = ForallT (maybe [] (fmap toTyVarBndr) tvbM) (fmap toPred cxt) (toType t)
+#else
+  toType (Hs.TyForall tvbM cxt t) = ForallT (maybe [] (fmap toName) tvbM) (fmap toType cxt) (toType t)
+#endif
   toType (Hs.TyFun a b) = toType a .->. toType b
   toType (Hs.TyList t) = ListT `AppT` toType t
   toType (Hs.TyTuple _ ts) = foldAppT (TupleT . length $ ts) (fmap toType ts)
@@ -257,14 +266,26 @@ hsBangTypeToStrictType (Hs.UnBangedTy t) = (NotStrict, toType t)
 
 instance ToDec Hs.Decl where
   toDec (Hs.TypeDecl _ n ns t)
+#if MIN_VERSION_template_haskell(2,4,0)
     = TySynD (toName n) (fmap toTyVarBndr ns) (toType t)
-
+#else
+    = TySynD (toName n) (fmap toName ns) (toType t)
+#endif
 
   toDec a@(Hs.DataDecl  _ dOrN cxt n ns qcds qns)
     = case dOrN of
-        Hs.DataType -> DataD (fmap toPred cxt)
+        Hs.DataType -> DataD
+#if MIN_VERSION_template_haskell(2,4,0)
+                              (fmap toPred cxt)
+#else
+                              (fmap toType cxt)
+#endif
                               (toName n)
+#if MIN_VERSION_template_haskell(2,4,0)
                               (fmap toTyVarBndr ns)
+#else
+                              (fmap toName ns)
+#endif
                               (fmap qualConDeclToCon qcds)
                               (fmap (toName . fst) qns)
         Hs.NewType  -> let qcd = case qcds of
@@ -272,7 +293,11 @@ instance ToDec Hs.Decl where
                                   _   -> error "toDec: Newtype has no constructors!"
                         in NewtypeD (fmap toPred cxt)
                                     (toName n)
+#if MIN_VERSION_template_haskell(2,4,0)
                                     (fmap toTyVarBndr ns)
+#else
+                                    (fmap toName ns)
+#endif
                                     (qualConDeclToCon qcd)
                                     (fmap (toName . fst) qns)
 
@@ -306,9 +331,12 @@ instance ToDec Hs.Decl where
 
 qualConDeclToCon :: Hs.QualConDecl -> Con
 qualConDeclToCon (Hs.QualConDecl _ [] [] cdecl) = conDeclToCon cdecl
-qualConDeclToCon (Hs.QualConDecl _ ns cxt cdecl) = ForallC (fmap toTyVarBndr ns)
-                                                    (fmap toPred cxt)
-                                                    (conDeclToCon cdecl)
+qualConDeclToCon (Hs.QualConDecl _ ns cxt cdecl) =
+#if MIN_VERSION_template_haskell(2,4,0)
+  ForallC (fmap toTyVarBndr ns) (fmap toPred cxt) (conDeclToCon cdecl)
+#else
+  ForallC (fmap toName ns) (fmap toType cxt) (conDeclToCon cdecl)
+#endif
 
 conDeclToCon :: Hs.ConDecl -> Con
 conDeclToCon (Hs.ConDecl n tys)
