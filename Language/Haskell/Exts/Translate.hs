@@ -215,6 +215,15 @@ instance ToPred Hs.Asst where
 instance ToTyVarBndr Hs.TyVarBind where
   toTyVarBndr (Hs.KindedVar n k) = KindedTV (toName n) (toKind k)
   toTyVarBndr (Hs.UnkindedVar n) = PlainTV (toName n)
+#else
+instance ToName Hs.TyVarBind where
+  toName (Hs.KindedVar n _) = toName n
+  toName (Hs.UnkindedVar n) = toName n
+
+instance ToType Hs.Asst where
+  toType (Hs.ClassA n ts) = foldAppT (ConT . toName $ n) (fmap toType ts)
+  toType a@(Hs.IParam _ _) = error $ errorMsg "toType" a
+  toType a@(Hs.EqualP _ _) = error $ errorMsg "toType" a
 #endif
 
 {- |
@@ -291,7 +300,12 @@ instance ToDec Hs.Decl where
         Hs.NewType  -> let qcd = case qcds of
                                   x:_ -> x
                                   _   -> error "toDec: Newtype has no constructors!"
-                        in NewtypeD (fmap toPred cxt)
+                        in NewtypeD
+#if MIN_VERSION_template_haskell(2,4,0)
+                                    (fmap toPred cxt)
+#else
+                                    (fmap toType cxt)
+#endif
                                     (toName n)
 #if MIN_VERSION_template_haskell(2,4,0)
                                     (fmap toTyVarBndr ns)
