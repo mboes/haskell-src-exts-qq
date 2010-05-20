@@ -1,5 +1,5 @@
 Name:           haskell-src-exts-qq
-Version:        0.2.2
+Version:        0.2.3
 Author:         Mathieu Boespflug
 Maintainer:     Mathieu Boespflug <mboes@tweag.net>
 Synopsis:       A quasiquoter for haskell-src-exts.
