@@ -10,7 +10,7 @@ Description:
     * Antiquotations, denoted by stealing the splice syntax of
     Template Haskell, for example @[$hs| $x ++ $(Hs.strE "bar") |]@.
     Splices may not nested.
-
+    .
     * Antiquoting names in patterns. Names that are antiquoted appear
     surrounded by double parentheses. For instance:
     .
