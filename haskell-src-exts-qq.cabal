@@ -29,8 +29,7 @@ source-repository head
 library
   Build-Depends:  base >= 4 && < 5, syb, template-haskell,
                   -- xxx awaiting cabal fix.
-                  haskell-src-exts == 1.9.0
+                  haskell-src-exts == 1.9.0,
+                  haskell-src-meta
   Extensions:      PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
   Exposed-Modules: Language.Haskell.Exts.QQ
-                   Language.Haskell.Exts.Translate
-  cpp-options:    -DVERSION_haskell_src_exts="1.9.0"
