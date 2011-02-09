@@ -16,7 +16,7 @@
 module Language.Haskell.Exts.QQ (hs, dec, hsWithMode, decWithMode) where
 
 import qualified Language.Haskell.Exts as Hs
-import qualified Language.Haskell.Exts.Translate as Hs
+import qualified Language.Haskell.Meta.Syntax.Translate as Hs
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib

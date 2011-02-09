@@ -28,7 +28,7 @@ source-repository head
 
 library
   Build-Depends:  base >= 4 && < 5, syb, template-haskell,
-                  haskell-src-exts >= 1.9.0
+                  haskell-src-exts >= 1.9.0,
+                  haskell-src-meta >= 0.3
   Extensions:      PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
   Exposed-Modules: Language.Haskell.Exts.QQ
-                   Language.Haskell.Exts.Translate
