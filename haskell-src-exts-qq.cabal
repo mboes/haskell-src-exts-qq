@@ -30,5 +30,6 @@ library
   Build-Depends:  base >= 4 && < 5, syb, template-haskell,
                   haskell-src-exts >= 1.9.0,
                   haskell-src-meta >= 0.3
-  Extensions:      PatternGuards, TypeSynonymInstances, TemplateHaskell, CPP
-  Exposed-Modules: Language.Haskell.Exts.QQ
+  Default-Language:     Haskell2010
+  Default-Extensions:   TemplateHaskell, CPP
+  Exposed-Modules:      Language.Haskell.Exts.QQ
