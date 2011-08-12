@@ -13,7 +13,7 @@
 --
 -- In a pattern context, antiquotations use the same syntax.
 
-module Language.Haskell.Exts.QQ (hs, dec, hsWithMode, decWithMode) where
+module Language.Haskell.Exts.QQ (hs, dec, ty, hsWithMode, decWithMode, tyWithMode) where
 
 import qualified Language.Haskell.Exts as Hs
 import qualified Language.Haskell.Meta.Syntax.Translate as Hs
@@ -23,15 +23,22 @@ import Language.Haskell.TH.Lib
 import Data.Generics
 import Data.List (intercalate)
 
+allExtensions :: Hs.ParseMode
+allExtensions = Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
 
 -- | A quasiquoter for expressions. All Haskell extensions known by
 -- haskell-src-exts are activated by default.
 hs :: QuasiQuoter
-hs = hsWithMode Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
+hs = hsWithMode allExtensions
+
+-- | A quasiquoter for types. All Haskell extensions known by
+-- haskell-src-exts are activated by default.
+ty :: QuasiQuoter
+ty = tyWithMode allExtensions
 
 -- | A quasiquoter for top-level declarations.
 dec :: QuasiQuoter
-dec = decWithMode Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
+dec = decWithMode allExtensions
 
 -- | Rather than importing the above quasiquoters, one can create custom
 -- quasiquoters with a customized 'ParseMode' using this function.
@@ -39,24 +46,22 @@ dec = decWithMode Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
 -- > hs = hsWithMode mode
 -- > dec = decWithMode mode
 hsWithMode :: Hs.ParseMode -> QuasiQuoter
-hsWithMode mode =
-  QuasiQuoter { quoteExp = Hs.parseExpWithMode mode `project` antiquoteExp
-              , quotePat = Hs.parsePat `project` antiquotePat
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
-              , quoteType = error "Unimplemented."
-              , quoteDec = error "Unimplemented."
-#endif
-              }
+hsWithMode = qq . Hs.parseExpWithMode
 
 decWithMode :: Hs.ParseMode -> QuasiQuoter
-decWithMode mode =
-  QuasiQuoter { quoteExp = Hs.parseDeclWithMode mode `project` antiquoteExp
-              , quotePat = Hs.parsePat `project` antiquotePat
+decWithMode = qq . Hs.parseDeclWithMode
+
+tyWithMode :: Hs.ParseMode -> QuasiQuoter
+tyWithMode = qq . Hs.parseTypeWithMode
+
+qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
+qq parser = QuasiQuoter { quoteExp = parser `project` antiquoteExp
+                        , quotePat = Hs.parsePat `project` antiquotePat
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
-              , quoteType = error "Unimplemented."
-              , quoteDec = error "Unimplemented."
+                        , quoteType = error "Unimplemented."
+                        , quoteDec = error "Unimplemented."
 #endif
-              }
+                        }
 
 project f k s = case f s of
                   Hs.ParseOk x -> k x
