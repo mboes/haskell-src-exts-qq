@@ -86,23 +86,20 @@ qualify n | ":" <- nameBase n = '(:)
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
-                 (const Nothing `extQ` antiE `extQ` antiP) t
+                 (const Nothing `extQ` antiE `extQ` antiP `extQ` antiN) t
     where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varE $ mkName v
           antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ Hs.toExp e
           antiE _ = Nothing
           antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
               Just $ appE [| Hs.PVar |] (varE (mkName n))
           antiP _ = Nothing
+          antiN (Hs.Ident ('_':n)) = 
+              Just $ (varE (mkName n))
+          antiN _ = Nothing
 
 antiquotePat :: Data a => a -> Q Pat
 antiquotePat = dataToQa qualify litP conP (const Nothing `extQ` antiP)
-    where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varP $ mkName v
-          antiE (Hs.SpliceExp (Hs.ParenSplice e)) =
-            case Hs.parsePat $ Hs.prettyPrint e of
-              Hs.ParseOk p -> Just $ return $ Hs.toPat p
-              Hs.ParseFailed _ err -> Just $ fail err
-          antiE _ = Nothing
-          antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
+    where antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
               Just $ conP 'Hs.PVar [varP (mkName n)]
           antiP _ = Nothing
 
