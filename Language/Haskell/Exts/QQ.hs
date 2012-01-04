@@ -9,7 +9,14 @@
 -- Names in patterns can also be antiquoted, using double parentheses. For
 -- instance:
 --
--- > let f = Hs.name "foo" in [$dec| ((f)) x = x + x |]
+-- > let x = Hs.name "n" in [hs| \ ((x)) -> $(Hs.Var (Hs.UnQual x)) + 1 |]
+--
+-- Alternatively, one can use the double underscore syntax, useful when
+-- antiquoting a function name as in the following:
+--
+-- > let f = "incr"
+-- >     fE = Hs.Var $ Hs.UnQual $ Hs.name f
+-- > in [hs| let __f__ x = x + 1 in $fE 10 |]
 --
 -- In a pattern context, antiquotations use the same syntax.
 

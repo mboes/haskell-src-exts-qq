@@ -11,10 +11,21 @@ Description:
     Template Haskell, for example @[hs| $x ++ $(Hs.strE "bar") |]@.
     Splices may not nested.
     .
-    * Antiquoting names in patterns. Names that are antiquoted appear
-    surrounded by double parentheses. For instance:
+    * Antiquoting pattern variables in patterns, using double
+    parentheses. For instance:
     .
-    > let b = Hs.name "foo" in [hs| f ((x)) = b + 1 |]
+    > let x = Hs.name "n" in [hs| \ ((x)) -> $(Hs.Var (Hs.UnQual x)) + 1 |]
+    .
+    * Antiquoting bound names. Names that are antiquoted appear
+    surrounded by double underscores. For instance:
+    .
+    > let f = "incr"
+    >     fE = Hs.Var $ Hs.UnQual $ Hs.name f
+    > in [hs| let __f__ x = x + 1 in $fE 10 |]
+    .
+    We need three different syntaxes for antiquotations, because we do
+    not extend the haskell-src-exts parser in any way and the Template
+    Haskell splicing syntax is only available in expression contexts.
 Category:       Language
 License:        BSD3
 License-File:   LICENSE
