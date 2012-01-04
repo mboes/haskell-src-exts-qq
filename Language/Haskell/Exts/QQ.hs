@@ -21,7 +21,7 @@ import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Data.Generics
-import Data.List (intercalate)
+import Data.List (intercalate, isPrefixOf, isSuffixOf)
 
 allExtensions :: Hs.ParseMode
 allExtensions = Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
@@ -93,8 +93,9 @@ antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
           antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
               Just $ appE [| Hs.PVar |] (varE (mkName n))
           antiP _ = Nothing
-          antiN (Hs.Ident ('_':n)) = 
-              Just $ (varE (mkName n))
+          antiN (Hs.Ident n) | "__" `isPrefixOf` n, "__" `isSuffixOf` n  =
+            let nn = take (length n - 4) (drop 2 n)
+            in Just $ appE [| Hs.Ident |] (varE (mkName nn))
           antiN _ = Nothing
 
 antiquotePat :: Data a => a -> Q Pat
@@ -102,4 +103,3 @@ antiquotePat = dataToQa qualify litP conP (const Nothing `extQ` antiP)
     where antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
               Just $ conP 'Hs.PVar [varP (mkName n)]
           antiP _ = Nothing
-
