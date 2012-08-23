@@ -87,6 +87,7 @@ qualify n | ":" <- nameBase n = '(:)
           | "Nothing" <- nameBase n = 'Nothing
           | "Just" <- nameBase n = 'Just
           | "SrcLoc" <- nameBase n = 'Hs.SrcLoc
+          | "Boxed" <- nameBase n = 'Hs.Boxed
           | otherwise = Name (mkOccName (nameBase n)) flavour
     where pkg = "haskell-src-exts-" ++ VERSION_haskell_src_exts
           flavour = NameG VarName (mkPkgName pkg)
