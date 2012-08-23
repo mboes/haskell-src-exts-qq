@@ -83,6 +83,7 @@ qualify :: Name -> Name
 -- all else is a datatype defined in Syntax module of haskell-src-exts.
 qualify n | ":" <- nameBase n = '(:)
           | "[]" <- nameBase n = '[]
+          | "(,)" <- nameBase n = '(,)
           | "Nothing" <- nameBase n = 'Nothing
           | "Just" <- nameBase n = 'Just
           | "SrcLoc" <- nameBase n = 'Hs.SrcLoc
