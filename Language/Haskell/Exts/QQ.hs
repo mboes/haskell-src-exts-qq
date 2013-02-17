@@ -26,7 +26,8 @@
 --
 -- In a pattern context, antiquotations use the same syntax.
 
-module Language.Haskell.Exts.QQ (hs, dec, ty, hsWithMode, decWithMode, tyWithMode) where
+module Language.Haskell.Exts.QQ (hs, dec, decs, ty,
+    hsWithMode, decWithMode, decsWithMode, tyWithMode) where
 
 import qualified Language.Haskell.Exts as Hs
 import qualified Language.Haskell.Meta.Syntax.Translate as Hs
@@ -49,20 +50,34 @@ hs = hsWithMode allExtensions
 ty :: QuasiQuoter
 ty = tyWithMode allExtensions
 
--- | A quasiquoter for top-level declarations.
+-- | A quasiquoter for a single top-level declaration.
 dec :: QuasiQuoter
 dec = decWithMode allExtensions
+
+-- | A quasiquoter for multiple top-level declarations.
+decs :: QuasiQuoter
+decs = decsWithMode allExtensions
 
 -- | Rather than importing the above quasiquoters, one can create custom
 -- quasiquoters with a customized 'ParseMode' using this function.
 --
 -- > hs = hsWithMode mode
 -- > dec = decWithMode mode
+-- > decs = decsWithMode mode
 hsWithMode :: Hs.ParseMode -> QuasiQuoter
 hsWithMode = qq . Hs.parseExpWithMode
 
 decWithMode :: Hs.ParseMode -> QuasiQuoter
 decWithMode = qq . Hs.parseDeclWithMode
+
+decsWithMode :: Hs.ParseMode -> QuasiQuoter
+decsWithMode mode = qq $ \src -> fmap strip $ Hs.parseModuleWithMode mode src
+    where
+        -- Implementation note, to parse multiple decls it's (ab)used that a
+        -- listing of decls (possibly with import istatements and other extras)
+        -- is a valid module.
+        strip :: Hs.Module -> [Hs.Decl]
+        strip (Hs.Module _ _ _ _ _ _ decs) = decs
 
 tyWithMode :: Hs.ParseMode -> QuasiQuoter
 tyWithMode = qq . Hs.parseTypeWithMode
