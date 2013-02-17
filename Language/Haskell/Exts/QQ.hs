@@ -18,6 +18,12 @@
 -- >     fE = Hs.Var $ Hs.UnQual $ Hs.name f
 -- > in [hs| let __f__ x = x + 1 in $fE 10 |]
 --
+-- The double parentheses syntax is also used for antiquoting types. For
+-- instance:
+--
+-- > let typ = Hs.TyCon (Hs.UnQual $ Hs.name "Int")
+-- > in [hs| 1 :: ((typ)) |]
+--
 -- In a pattern context, antiquotations use the same syntax.
 
 module Language.Haskell.Exts.QQ (hs, dec, ty, hsWithMode, decWithMode, tyWithMode) where
@@ -103,13 +109,15 @@ qualify n | ":" <- nameBase n = '(:)
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
-                 (const Nothing `extQ` antiE `extQ` antiP `extQ` antiN) t
+                 (const Nothing `extQ` antiE `extQ` antiP `extQ` antiN `extQ` antiT) t
     where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varE $ mkName v
           antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ Hs.toExp e
           antiE _ = Nothing
           antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
               Just $ appE [| Hs.PVar |] (varE (mkName n))
           antiP _ = Nothing
+          antiT (Hs.TyParen (Hs.TyParen (Hs.TyVar (Hs.Ident n)))) = Just . varE $ mkName n
+          antiT _ = Nothing
           antiN (Hs.Ident n) | "__" `isPrefixOf` n, "__" `isSuffixOf` n  =
             let nn = take (length n - 4) (drop 2 n)
             in Just $ appE [| Hs.Ident |] (varE (mkName nn))
