@@ -86,6 +86,14 @@ qualify n | ":" <- nameBase n = '(:)
           | "(,)" <- nameBase n = '(,)
           | "Nothing" <- nameBase n = 'Nothing
           | "Just" <- nameBase n = 'Just
+          | "True"      <- nameBase n = 'True
+          | "False"     <- nameBase n = 'False
+          | "Left"      <- nameBase n = 'Left
+          | "Right"     <- nameBase n = 'Right
+          | "LT"        <- nameBase n = 'LT
+          | "EQ"        <- nameBase n = 'EQ
+          -- GT is also exported by Data.Generics
+          | "GT"        <- nameBase n = 'Prelude.GT
           | "SrcLoc" <- nameBase n = 'Hs.SrcLoc
           | "Boxed" <- nameBase n = 'Hs.Boxed
           | otherwise = Name (mkOccName (nameBase n)) flavour
