@@ -96,10 +96,13 @@ project f k s = case f s of
                   Hs.ParseFailed loc err -> fail err
 
 -- | The generic functions in 'Language.Haskell.TH.Quote' don't use global
--- names for syntax constructors. This has the unfortunate effect of breaking
--- quotation when the haskell-src-exts syntax module is imported qualified.
--- The solution is to set the flavour of all names to 'NameG'.
+-- names for syntax constructors previous to GHC 7.4.1. This has the unfortunate
+-- effect of breaking quotation when the haskell-src-exts syntax module is
+-- imported qualified. The solution is to set the flavour of all names to
+-- 'NameG' on older versions of GHC.
+-- See also <http://www.haskell.org/pipermail/glasgow-haskell-users/2013-February/023793.html>.
 qualify :: Name -> Name
+#if defined(__GLASGOW_HASKELL__) &&  __GLASGOW_HASKELL__ < 704
 -- Need special cases for constructors used in string literals. Assume nearly
 -- all else is a datatype defined in Syntax module of haskell-src-exts.
 qualify n | ":" <- nameBase n = '(:)
@@ -121,6 +124,9 @@ qualify n | ":" <- nameBase n = '(:)
     where pkg = "haskell-src-exts-" ++ VERSION_haskell_src_exts
           flavour = NameG VarName (mkPkgName pkg)
                     (mkModName "Language.Haskell.Exts.Syntax")
+#else
+qualify n = n
+#endif
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
