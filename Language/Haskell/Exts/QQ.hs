@@ -20,7 +20,10 @@
 --
 -- In a pattern context, antiquotations use the same syntax.
 
-module Language.Haskell.Exts.QQ (hs, dec, ty, hsWithMode, decWithMode, tyWithMode) where
+module Language.Haskell.Exts.QQ (
+    hs, dec, ty, pat,
+    hsWithMode, decWithMode, tyWithMode, patWithMode
+) where
 
 import qualified Language.Haskell.Exts as Hs
 import qualified Language.Haskell.Meta.Syntax.Translate as Hs
@@ -47,6 +50,10 @@ ty = tyWithMode allExtensions
 dec :: QuasiQuoter
 dec = decWithMode allExtensions
 
+-- | A quasiquoter for patterns
+pat :: QuasiQuoter
+pat = patWithMode allExtensions
+
 -- | Rather than importing the above quasiquoters, one can create custom
 -- quasiquoters with a customized 'ParseMode' using this function.
 --
@@ -60,6 +67,9 @@ decWithMode = qq . Hs.parseDeclWithMode
 
 tyWithMode :: Hs.ParseMode -> QuasiQuoter
 tyWithMode = qq . Hs.parseTypeWithMode
+
+patWithMode :: Hs.ParseMode -> QuasiQuoter
+patWithMode = qq . Hs.parsePatWithMode
 
 qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
 qq parser = QuasiQuoter { quoteExp = parser `project` antiquoteExp
