@@ -63,7 +63,7 @@ tyWithMode = qq . Hs.parseTypeWithMode
 
 qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
 qq parser = QuasiQuoter { quoteExp = parser `project` antiquoteExp
-                        , quotePat = Hs.parsePat `project` antiquotePat
+                        , quotePat = parser `project` antiquotePat
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
                         , quoteType = error "Unimplemented."
                         , quoteDec = error "Unimplemented."
