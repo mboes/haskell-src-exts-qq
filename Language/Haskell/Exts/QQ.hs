@@ -31,7 +31,14 @@ import Data.Generics
 import Data.List (intercalate, isPrefixOf, isSuffixOf)
 
 allExtensions :: Hs.ParseMode
-allExtensions = Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
+allExtensions = Hs.defaultParseMode{Hs.extensions = known}
+  where
+#if MIN_VERSION_haskell_src_exts(1,14,0)
+   known = [ext | ext@Hs.EnableExtension{} <- Hs.knownExtensions]
+#else
+   known = Hs.knownExtensions
+#endif
+
 
 -- | A quasiquoter for expressions. All Haskell extensions known by
 -- haskell-src-exts are activated by default.
