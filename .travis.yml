@@ -4,3 +4,11 @@ ghc:
   - 7.8
   - 7.6
   - 7.4
+
+env:
+  global:
+    - PATH=~/.caba/bin:$PATH
+
+install:
+  - cabal install happy
+  - cabal install --only-dependencies --enable-tests
