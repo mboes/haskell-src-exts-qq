@@ -19,7 +19,7 @@ License:        BSD3
 License-File:   LICENSE
 Cabal-Version:  >= 1.10.0
 Build-Type:     Simple
-Tested-With:    GHC == 7.0.1
+Tested-With:    GHC==7.4, GHC==7.6, GHC==7.8
 
 source-repository head
   type:     git
