@@ -50,3 +50,16 @@ library
   Default-Language:     Haskell2010
   Default-Extensions:   TemplateHaskell, CPP
   Exposed-Modules:      Language.Haskell.Exts.QQ
+
+test-suite tests
+  Type:                 exitcode-stdio-1.0
+  Default-Language:     Haskell2010
+  Default-Extensions:   CPP
+                        QuasiQuotes
+                        TemplateHaskell
+  Hs-Source-Dirs:       tests
+  Main-Is:              test.hs
+  Ghc-Options:          -Wall
+  Build-Depends:        base >= 4,
+                        haskell-src-exts-qq,
+                        hspec >= 1.11
