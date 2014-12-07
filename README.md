@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.org/mboes/haskell-src-exts-qq.svg?branch=master)](https://travis-ci.org/mboes/haskell-src-exts-qq)
 [![Hackage](https://img.shields.io/hackage/v/haskell-src-exts-qq.svg)](https://hackage.haskell.org/package/haskell-src-exts-qq)
 
-Allows one to write programs that generate Haskell programs much more
-concisely and legibly. This package supports:
+Write programs that generate Haskell programs much more concisely and
+legibly. This package supports:
 
 * Antiquotations, denoted by stealing the splice syntax of Template
 Haskell, for example:
@@ -29,5 +29,8 @@ by double underscores. For instance:
     ```
 
 We need three different syntaxes for antiquotations, because we do not
-extend the haskell-src-exts parser in any way and the Template Haskell
-splicing syntax is only available in expression contexts.
+extend the [haskell-src-exts][haskell-src-exts] parser in any way and
+the Template Haskell splicing syntax is only available in expression
+contexts.
+
+[haskell-src-exts]: http://hackage.haskell.org/package/haskell-src-exts
