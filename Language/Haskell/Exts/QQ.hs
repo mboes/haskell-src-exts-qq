@@ -31,7 +31,8 @@ import Data.Generics
 import Data.List (intercalate, isPrefixOf, isSuffixOf)
 
 allExtensions :: Hs.ParseMode
-allExtensions = Hs.defaultParseMode{Hs.extensions = Hs.knownExtensions}
+allExtensions = Hs.defaultParseMode{Hs.extensions = known}
+  where known = [ext | ext@Hs.EnableExtension{} <- Hs.knownExtensions]
 
 -- | A quasiquoter for expressions. All Haskell extensions known by
 -- haskell-src-exts are activated by default.
