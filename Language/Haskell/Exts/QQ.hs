@@ -26,8 +26,16 @@
 --
 -- In a pattern context, antiquotations use the same syntax.
 
-module Language.Haskell.Exts.QQ (hs, dec, decs, ty,
-    hsWithMode, decWithMode, decsWithMode, tyWithMode) where
+module Language.Haskell.Exts.QQ
+    ( hs
+    , dec
+    , decs
+    , ty
+    , hsWithMode
+    , decWithMode
+    , decsWithMode
+    , tyWithMode
+    ) where
 
 import qualified Language.Haskell.Exts as Hs
 import qualified Language.Haskell.Meta.Syntax.Translate as Hs
