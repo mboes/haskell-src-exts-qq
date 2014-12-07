@@ -1,4 +1,4 @@
-# haskell-src-exts-qq: A quasiquoter for haskell-src-exts
+# haskell-src-exts-qq: quasiquote Haskell
 
 [![Build Status](https://travis-ci.org/mboes/haskell-src-exts-qq.svg?branch=master)](https://travis-ci.org/mboes/haskell-src-exts-qq)
 [![Hackage](https://img.shields.io/hackage/v/haskell-src-exts-qq.svg)](https://hackage.haskell.org/package/haskell-src-exts-qq)
