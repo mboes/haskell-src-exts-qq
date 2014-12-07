@@ -30,10 +30,12 @@ module Language.Haskell.Exts.QQ
     ( hs
     , dec
     , decs
+    , pat
     , ty
     , hsWithMode
     , decWithMode
     , decsWithMode
+    , patWithMode
     , tyWithMode
     ) where
 
@@ -72,6 +74,10 @@ dec = decWithMode allExtensions
 decs :: QuasiQuoter
 decs = decsWithMode allExtensions
 
+-- | A quasiquoter for patterns
+pat :: QuasiQuoter
+pat = patWithMode allExtensions
+
 -- | Rather than importing the above quasiquoters, one can create custom
 -- quasiquoters with a customized 'ParseMode' using this function.
 --
@@ -96,9 +102,12 @@ decsWithMode mode = qq $ \src -> fmap strip $ Hs.parseModuleWithMode mode src
 tyWithMode :: Hs.ParseMode -> QuasiQuoter
 tyWithMode = qq . Hs.parseTypeWithMode
 
+patWithMode :: Hs.ParseMode -> QuasiQuoter
+patWithMode = qq . Hs.parsePatWithMode
+
 qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
 qq parser = QuasiQuoter { quoteExp = parser `project` antiquoteExp
-                        , quotePat = Hs.parsePat `project` antiquotePat
+                        , quotePat = parser `project` antiquotePat
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
                         , quoteType = error "Unimplemented."
                         , quoteDec = error "Unimplemented."
