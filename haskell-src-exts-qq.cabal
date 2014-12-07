@@ -62,4 +62,5 @@ test-suite tests
   Ghc-Options:          -Wall
   Build-Depends:        base >= 4,
                         haskell-src-exts-qq,
+                        haskell-src-exts >= 1.9,
                         hspec >= 1.11
