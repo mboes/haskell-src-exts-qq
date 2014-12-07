@@ -18,9 +18,16 @@
 -- >     fE = Hs.Var $ Hs.UnQual $ Hs.name f
 -- > in [hs| let __f__ x = x + 1 in $fE 10 |]
 --
+-- The double parentheses syntax is also used for antiquoting types. For
+-- instance:
+--
+-- > let typ = Hs.TyCon (Hs.UnQual $ Hs.name "Int")
+-- > in [hs| 1 :: ((typ)) |]
+--
 -- In a pattern context, antiquotations use the same syntax.
 
-module Language.Haskell.Exts.QQ (hs, dec, ty, hsWithMode, decWithMode, tyWithMode) where
+module Language.Haskell.Exts.QQ (hs, dec, decs, ty,
+    hsWithMode, decWithMode, decsWithMode, tyWithMode) where
 
 import qualified Language.Haskell.Exts as Hs
 import qualified Language.Haskell.Meta.Syntax.Translate as Hs
@@ -50,20 +57,34 @@ hs = hsWithMode allExtensions
 ty :: QuasiQuoter
 ty = tyWithMode allExtensions
 
--- | A quasiquoter for top-level declarations.
+-- | A quasiquoter for a single top-level declaration.
 dec :: QuasiQuoter
 dec = decWithMode allExtensions
+
+-- | A quasiquoter for multiple top-level declarations.
+decs :: QuasiQuoter
+decs = decsWithMode allExtensions
 
 -- | Rather than importing the above quasiquoters, one can create custom
 -- quasiquoters with a customized 'ParseMode' using this function.
 --
 -- > hs = hsWithMode mode
 -- > dec = decWithMode mode
+-- > decs = decsWithMode mode
 hsWithMode :: Hs.ParseMode -> QuasiQuoter
 hsWithMode = qq . Hs.parseExpWithMode
 
 decWithMode :: Hs.ParseMode -> QuasiQuoter
 decWithMode = qq . Hs.parseDeclWithMode
+
+decsWithMode :: Hs.ParseMode -> QuasiQuoter
+decsWithMode mode = qq $ \src -> fmap strip $ Hs.parseModuleWithMode mode src
+    where
+        -- Implementation note, to parse multiple decls it's (ab)used that a
+        -- listing of decls (possibly with import istatements and other extras)
+        -- is a valid module.
+        strip :: Hs.Module -> [Hs.Decl]
+        strip (Hs.Module _ _ _ _ _ _ decs) = decs
 
 tyWithMode :: Hs.ParseMode -> QuasiQuoter
 tyWithMode = qq . Hs.parseTypeWithMode
@@ -82,10 +103,13 @@ project f k s = case f s of
                   Hs.ParseFailed loc err -> fail err
 
 -- | The generic functions in 'Language.Haskell.TH.Quote' don't use global
--- names for syntax constructors. This has the unfortunate effect of breaking
--- quotation when the haskell-src-exts syntax module is imported qualified.
--- The solution is to set the flavour of all names to 'NameG'.
+-- names for syntax constructors previous to GHC 7.4.1. This has the unfortunate
+-- effect of breaking quotation when the haskell-src-exts syntax module is
+-- imported qualified. The solution is to set the flavour of all names to
+-- 'NameG' on older versions of GHC.
+-- See also <http://www.haskell.org/pipermail/glasgow-haskell-users/2013-February/023793.html>.
 qualify :: Name -> Name
+#if defined(__GLASGOW_HASKELL__) &&  __GLASGOW_HASKELL__ < 704
 -- Need special cases for constructors used in string literals. Assume nearly
 -- all else is a datatype defined in Syntax module of haskell-src-exts.
 qualify n | ":" <- nameBase n = '(:)
@@ -93,22 +117,35 @@ qualify n | ":" <- nameBase n = '(:)
           | "(,)" <- nameBase n = '(,)
           | "Nothing" <- nameBase n = 'Nothing
           | "Just" <- nameBase n = 'Just
+          | "True"      <- nameBase n = 'True
+          | "False"     <- nameBase n = 'False
+          | "Left"      <- nameBase n = 'Left
+          | "Right"     <- nameBase n = 'Right
+          | "LT"        <- nameBase n = 'LT
+          | "EQ"        <- nameBase n = 'EQ
+          -- GT is also exported by Data.Generics
+          | "GT"        <- nameBase n = 'Prelude.GT
           | "SrcLoc" <- nameBase n = 'Hs.SrcLoc
           | "Boxed" <- nameBase n = 'Hs.Boxed
           | otherwise = Name (mkOccName (nameBase n)) flavour
     where pkg = "haskell-src-exts-" ++ VERSION_haskell_src_exts
           flavour = NameG VarName (mkPkgName pkg)
                     (mkModName "Language.Haskell.Exts.Syntax")
+#else
+qualify n = n
+#endif
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
-                 (const Nothing `extQ` antiE `extQ` antiP `extQ` antiN) t
+                 (const Nothing `extQ` antiE `extQ` antiP `extQ` antiN `extQ` antiT) t
     where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varE $ mkName v
           antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ Hs.toExp e
           antiE _ = Nothing
           antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
               Just $ appE [| Hs.PVar |] (varE (mkName n))
           antiP _ = Nothing
+          antiT (Hs.TyParen (Hs.TyParen (Hs.TyVar (Hs.Ident n)))) = Just . varE $ mkName n
+          antiT _ = Nothing
           antiN (Hs.Ident n) | "__" `isPrefixOf` n, "__" `isSuffixOf` n  =
             let nn = take (length n - 4) (drop 2 n)
             in Just $ appE [| Hs.Ident |] (varE (mkName nn))
