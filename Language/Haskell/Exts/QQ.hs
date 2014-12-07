@@ -54,7 +54,6 @@ allExtensions = Hs.defaultParseMode{Hs.extensions = known}
    known = Hs.knownExtensions
 #endif
 
-
 -- | A quasiquoter for expressions. All Haskell extensions known by
 -- haskell-src-exts are activated by default.
 hs :: QuasiQuoter

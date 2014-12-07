@@ -44,9 +44,9 @@ source-repository head
   location: git://github.com/mboes/haskell-src-exts-qq
 
 library
-  Build-Depends:  base >= 4 && < 5, syb, template-haskell,
-                  haskell-src-exts >= 1.9.0,
-                  haskell-src-meta >= 0.3
+  Build-Depends:        base >= 4 && < 5, syb, template-haskell,
+                        haskell-src-exts >= 1.9.0,
+                        haskell-src-meta >= 0.3
   Default-Language:     Haskell2010
   Default-Extensions:   TemplateHaskell, CPP
   Exposed-Modules:      Language.Haskell.Exts.QQ
