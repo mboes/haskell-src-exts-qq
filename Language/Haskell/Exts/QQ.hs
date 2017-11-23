@@ -46,7 +46,13 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Data.Generics
 import Data.List (intercalate, isPrefixOf, isSuffixOf)
+#if defined(__GLASGOW_HASKELL__) &&  __GLASGOW_HASKELL__ < 781
+import Data.Functor
+void :: Functor f => f a -> f ()
+void x = () <$ x
+#else
 import Data.Functor (void)
+#endif
 
 allExtensions :: Hs.ParseMode
 allExtensions = Hs.defaultParseMode{Hs.extensions = known}
@@ -86,27 +92,27 @@ pat = patWithMode allExtensions
 -- > dec = decWithMode mode
 -- > decs = decsWithMode mode
 hsWithMode :: Hs.ParseMode -> QuasiQuoter
-hsWithMode = qq . fmap void . Hs.parseExpWithMode
+hsWithMode = qq . fmap (fmap void) . Hs.parseExpWithMode
 
 decWithMode :: Hs.ParseMode -> QuasiQuoter
-decWithMode = qq . fmap void .  Hs.parseDeclWithMode
+decWithMode = qq . fmap (fmap void) . Hs.parseDeclWithMode
 
 decsWithMode :: Hs.ParseMode -> QuasiQuoter
-decsWithMode mode = qq $ \src -> fmap (strip . void) $ Hs.parseModuleWithMode mode src
+decsWithMode mode = qq $ \src -> fmap strip $ Hs.parseModuleWithMode mode src
     where
         -- Implementation note, to parse multiple decls it's (ab)used that a
         -- listing of decls (possibly with import istatements and other extras)
         -- is a valid module.
-        strip :: Hs.Module () -> [Hs.Decl ()]
-        strip (Hs.Module _ _ _ _ decs) = decs
+        strip :: Hs.Module l -> [Hs.Decl ()]
+        strip (Hs.Module _ _ _ _ decs) = fmap void decs
 
 tyWithMode :: Hs.ParseMode -> QuasiQuoter
-tyWithMode = qq . Hs.parseTypeWithMode
+tyWithMode = qq . fmap (fmap void) . Hs.parseTypeWithMode
 
 patWithMode :: Hs.ParseMode -> QuasiQuoter
-patWithMode = qq . Hs.parsePatWithMode
+patWithMode = qq . fmap (fmap void) . Hs.parsePatWithMode
 
---qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
+qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
 qq parser = QuasiQuoter { quoteExp = parser `project` antiquoteExp
                         , quotePat = parser `project` antiquotePat
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
