@@ -39,13 +39,14 @@ module Language.Haskell.Exts.QQ
     , tyWithMode
     ) where
 
-import qualified Language.Haskell.Exts as Hs
-import qualified Language.Haskell.Meta.Syntax.Translate as Hs
+import qualified Language.Haskell.Exts as Hs 
+import qualified Language.Haskell.Meta.Syntax.Translate as Hs (toExp)
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Data.Generics
 import Data.List (intercalate, isPrefixOf, isSuffixOf)
+import Data.Functor (void)
 
 allExtensions :: Hs.ParseMode
 allExtensions = Hs.defaultParseMode{Hs.extensions = known}
@@ -85,19 +86,19 @@ pat = patWithMode allExtensions
 -- > dec = decWithMode mode
 -- > decs = decsWithMode mode
 hsWithMode :: Hs.ParseMode -> QuasiQuoter
-hsWithMode = qq . Hs.parseExpWithMode
+hsWithMode = qq . fmap void . Hs.parseExpWithMode
 
 decWithMode :: Hs.ParseMode -> QuasiQuoter
-decWithMode = qq . Hs.parseDeclWithMode
+decWithMode = qq . fmap void .  Hs.parseDeclWithMode
 
 decsWithMode :: Hs.ParseMode -> QuasiQuoter
-decsWithMode mode = qq $ \src -> fmap strip $ Hs.parseModuleWithMode mode src
+decsWithMode mode = qq $ \src -> fmap (strip . void) $ Hs.parseModuleWithMode mode src
     where
         -- Implementation note, to parse multiple decls it's (ab)used that a
         -- listing of decls (possibly with import istatements and other extras)
         -- is a valid module.
-        strip :: Hs.Module -> [Hs.Decl]
-        strip (Hs.Module _ _ _ _ _ _ decs) = decs
+        strip :: Hs.Module () -> [Hs.Decl ()]
+        strip (Hs.Module _ _ _ _ decs) = decs
 
 tyWithMode :: Hs.ParseMode -> QuasiQuoter
 tyWithMode = qq . Hs.parseTypeWithMode
@@ -105,7 +106,7 @@ tyWithMode = qq . Hs.parseTypeWithMode
 patWithMode :: Hs.ParseMode -> QuasiQuoter
 patWithMode = qq . Hs.parsePatWithMode
 
-qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
+--qq :: Data a => (String -> Hs.ParseResult a) -> QuasiQuoter
 qq parser = QuasiQuoter { quoteExp = parser `project` antiquoteExp
                         , quotePat = parser `project` antiquotePat
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 613
@@ -153,22 +154,24 @@ qualify n = n
 
 antiquoteExp :: Data a => a -> Q Exp
 antiquoteExp t = dataToQa (conE . qualify) litE (foldl appE)
-                 (const Nothing `extQ` antiE `extQ` antiP `extQ` antiN `extQ` antiT) t
-    where antiE (Hs.SpliceExp (Hs.IdSplice v)) = Just $ varE $ mkName v
-          antiE (Hs.SpliceExp (Hs.ParenSplice e)) = Just $ return $ Hs.toExp e
+                 (const Nothing `ext1Q` antiE `ext1Q` antiP `ext1Q` antiN `ext1Q` antiT) t
+    where 
+          antiE (Hs.SpliceExp _ (Hs.IdSplice _ v)) = Just $ varE $ mkName v
+          antiE (Hs.SpliceExp _ (Hs.ParenSplice _ e)) = Just $ return $ Hs.toExp e
           antiE _ = Nothing
-          antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
-              Just $ appE [| Hs.PVar |] (varE (mkName n))
+          antiP (Hs.PParen _ (Hs.PParen _ (Hs.PVar _ (Hs.Ident _ n)))) =
+              Just $ appE [| Hs.PVar () |] (varE (mkName n))
           antiP _ = Nothing
-          antiT (Hs.TyParen (Hs.TyParen (Hs.TyVar (Hs.Ident n)))) = Just . varE $ mkName n
+          antiT (Hs.TyParen _ (Hs.TyParen _ (Hs.TyVar _ (Hs.Ident _ n)))) = Just . varE $ mkName n
           antiT _ = Nothing
-          antiN (Hs.Ident n) | "__" `isPrefixOf` n, "__" `isSuffixOf` n  =
+          antiN (Hs.Ident _ n) | "__" `isPrefixOf` n, "__" `isSuffixOf` n  =
             let nn = take (length n - 4) (drop 2 n)
-            in Just $ appE [| Hs.Ident |] (varE (mkName nn))
+            in Just $ appE [| Hs.Ident () |] (varE (mkName nn))
           antiN _ = Nothing
 
 antiquotePat :: Data a => a -> Q Pat
-antiquotePat = dataToQa qualify litP conP (const Nothing `extQ` antiP)
-    where antiP (Hs.PParen (Hs.PParen (Hs.PVar (Hs.Ident n)))) =
-              Just $ conP 'Hs.PVar [varP (mkName n)]
+antiquotePat = dataToQa qualify litP conP (const Nothing `ext1Q` antiP)
+    where 
+          antiP (Hs.PParen _ (Hs.PParen _ (Hs.PVar _ (Hs.Ident _ n)))) =
+              Just $ conP 'Hs.PVar [wildP, varP (mkName n)]
           antiP _ = Nothing

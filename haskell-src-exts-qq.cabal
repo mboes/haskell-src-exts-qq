@@ -1,5 +1,5 @@
 Name:           haskell-src-exts-qq
-Version:        0.6.1
+Version:        0.8
 Author:         Mathieu Boespflug
 Maintainer:     Mathieu Boespflug <mboes@tweag.net>
 Synopsis:       A quasiquoter for haskell-src-exts.
@@ -19,7 +19,7 @@ License:        BSD3
 License-File:   LICENSE
 Cabal-Version:  >= 1.10.0
 Build-Type:     Simple
-Tested-With:    GHC==7.4.2, GHC==7.6.3, GHC==7.8.4, GHC==7.10.2
+Tested-With:    GHC==8.2.2
 
 source-repository head
   type:     git
@@ -27,8 +27,8 @@ source-repository head
 
 library
   Build-Depends:        base >= 4 && < 5, syb, template-haskell,
-                        haskell-src-exts >= 1.9.0,
-                        haskell-src-meta >= 0.3
+                        haskell-src-exts >= 1.18.0,
+                        haskell-src-meta >= 0.8
   Default-Language:     Haskell2010
   Default-Extensions:   TemplateHaskell, CPP
   Exposed-Modules:      Language.Haskell.Exts.QQ
@@ -44,5 +44,5 @@ test-suite tests
   Ghc-Options:          -Wall
   Build-Depends:        base >= 4,
                         haskell-src-exts-qq,
-                        haskell-src-exts >= 1.9,
+                        haskell-src-exts >= 1.18.0,
                         hspec >= 1.11
