@@ -46,7 +46,7 @@ import Language.Haskell.TH.Quote
 import Language.Haskell.TH.Lib
 import Data.Generics
 import Data.List (intercalate, isPrefixOf, isSuffixOf)
-#if defined(__GLASGOW_HASKELL__) &&  __GLASGOW_HASKELL__ < 781
+#if defined(__GLASGOW_HASKELL__) &&  __GLASGOW_HASKELL__ < 708
 import Data.Functor
 void :: Functor f => f a -> f ()
 void x = () <$ x
