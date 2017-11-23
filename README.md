@@ -17,14 +17,14 @@ Splices may not nested.
 For instance:
     ```Haskell
     let x = Hs.name "n"
-    in [hs| \ ((x)) -> $(Hs.Var (Hs.UnQual x)) + 1 |]
+    in [hs| \ ((x)) -> $(Hs.Var () (Hs.UnQual () x)) + 1 |]
     ```
 
 * Antiquoting bound names. Names that are antiquoted appear surrounded
 by double underscores. For instance:
     ```Haskell
     let f = "incr"
-        fE = Hs.Var $ Hs.UnQual $ Hs.name f
+        fE = Hs.Var () $ Hs.UnQual () $ Hs.name f
     in [hs| let __f__ x = x + 1 in $fE 10 |]
     ```
 
